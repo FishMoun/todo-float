@@ -389,8 +389,12 @@ class TodoFloat(ctk.CTk):
                                            command=self.open_settings)
         self.settings_btn.pack(side="right", padx=(0, 2), pady=6)
 
+        # ---- Collapsible content wrapper ----
+        self.content_frame = ctk.CTkFrame(self._inner, fg_color="transparent")
+        self.content_frame.pack(fill="both", expand=True)
+
         # ---- Status bar ----
-        self.status_bar = ctk.CTkFrame(self._inner, height=28, corner_radius=0,
+        self.status_bar = ctk.CTkFrame(self.content_frame, height=28, corner_radius=0,
                                         fg_color=ACCENT_LIGHT)
         self.status_bar.pack(fill="x")
         self.status_bar.pack_propagate(False)
@@ -400,11 +404,11 @@ class TodoFloat(ctk.CTk):
         self.status_label.pack(side="left", padx=12, pady=4)
 
         # ---- Task list (scrollable) ----
-        self.task_scroll = ctk.CTkScrollableFrame(self._inner, fg_color="transparent")
+        self.task_scroll = ctk.CTkScrollableFrame(self.content_frame, fg_color="transparent")
         self.task_scroll.pack(fill="both", expand=True, padx=4, pady=(2, 0))
 
         # ---- Quick-add bar ----
-        self.add_frame = ctk.CTkFrame(self._inner, height=44, corner_radius=0,
+        self.add_frame = ctk.CTkFrame(self.content_frame, height=44, corner_radius=0,
                                        fg_color=LIGHT_SURFACE)
         self.add_frame.pack(fill="x", side="bottom", padx=0, pady=0)
         self.add_frame.pack_propagate(False)
@@ -725,20 +729,15 @@ class TodoFloat(ctk.CTk):
             # Expand
             self.collapsed = False
             self.collapse_btn.configure(text="▼")
-            self.status_bar.pack(fill="x", before=self.task_scroll)
-            self.task_scroll.pack(fill="both", expand=True, padx=4, pady=(2, 0),
-                                  before=self.add_frame)
-            self.add_frame.pack(fill="x", side="bottom", padx=0, pady=0)
+            self.content_frame.pack(fill="both", expand=True)
             if self._expanded_geometry:
                 self.geometry(self._expanded_geometry)
         else:
-            # Collapse — save geometry, hide content, shrink
+            # Collapse — save geometry, hide content, shrink to title bar
             self.collapsed = True
             self.collapse_btn.configure(text="▲")
             self._expanded_geometry = self.geometry()
-            self.status_bar.pack_forget()
-            self.task_scroll.pack_forget()
-            self.add_frame.pack_forget()
+            self.content_frame.pack_forget()
             x, y = self.winfo_x(), self.winfo_y()
             w = self.winfo_width()
             self.geometry(f"{w}x44+{x}+{y}")
