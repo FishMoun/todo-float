@@ -529,17 +529,26 @@ class TodoFloat(ctk.CTk):
             self._update_status_counts(tasks)
             return
 
-        grouped = {5: [], 4: [], 3: [], 2: [], 1: [], 0: []}
+        grouped = {5: [], 4: [], 2: [], 0: []}
         for t in tasks:
             prio = t.get("priority", 0)
-            grouped.setdefault(prio, []).append(t)
+            # Normalize Vikunja 0-5 to 4 display tiers
+            if prio >= 5:
+                tier = 5
+            elif prio >= 3:
+                tier = 4
+            elif prio >= 1:
+                tier = 2
+            else:
+                tier = 0
+            grouped[tier].append(t)
 
-        for prio in [5, 4, 3, 2, 1, 0]:
-            group_tasks = grouped[prio]
+        for tier in [5, 4, 2, 0]:
+            group_tasks = grouped[tier]
             if not group_tasks:
                 continue
 
-            pconfig = PRIORITY_CONFIG.get(prio, PRIORITY_CONFIG[0])
+            pconfig = PRIORITY_CONFIG.get(tier, PRIORITY_CONFIG[0])
             undone = sum(1 for t in group_tasks if not t.get("done"))
 
             # Group header
