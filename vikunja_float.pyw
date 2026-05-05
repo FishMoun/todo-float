@@ -293,7 +293,16 @@ class TodoFloat(ctk.CTk):
 
         # Window setup — no native title bar
         self.title("待办助手")
-        self.geometry(self.config.get("window_geometry", "360x520+100+100"))
+        geo = self.config.get("window_geometry", "360x520+100+100")
+        # Guard against corrupted geometry (e.g. collapsed state was saved)
+        try:
+            parts = geo.replace("+", "x").split("x")
+            _, h = int(parts[0]), int(parts[1])
+            if h < 100:
+                geo = "360x520+100+100"
+        except (ValueError, IndexError):
+            geo = "360x520+100+100"
+        self.geometry(geo)
         self.overrideredirect(True)          # remove native title bar
         self.attributes("-topmost", self.config.get("always_on_top", True))
         self.configure(fg_color=LIGHT_BG)
