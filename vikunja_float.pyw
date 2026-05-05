@@ -288,11 +288,12 @@ class TodoFloat(ctk.CTk):
         self.auto_refresh_id = None
         self._drag_x = 0
         self._drag_y = 0
+        self.collapsed = False
+        self._expanded_geometry = None
 
         # Window setup — no native title bar
         self.title("待办助手")
         self.geometry(self.config.get("window_geometry", "360x520+100+100"))
-        self.minsize(300, 350)
         self.overrideredirect(True)          # remove native title bar
         self.attributes("-topmost", self.config.get("always_on_top", True))
         self.configure(fg_color=LIGHT_BG)
@@ -355,6 +356,15 @@ class TodoFloat(ctk.CTk):
                                             text_color="#bfdbfe",
                                             font=ctk.CTkFont(size=10))
         self.connection_dot.pack(side="left", padx=(0, 10))
+
+        # Collapse button
+        self.collapse_btn = ctk.CTkButton(self.title_frame, text="▼", width=32, height=28,
+                                           fg_color="transparent",
+                                           text_color="#dbeafe",
+                                           hover_color="#93c5fd",
+                                           font=ctk.CTkFont(size=10),
+                                           command=self._toggle_collapse)
+        self.collapse_btn.pack(side="left", padx=(0, 2), pady=6)
 
         # Close button (×) — replaces native title bar buttons
         self.close_btn = ctk.CTkButton(self.title_frame, text="✕", width=36, height=28,
@@ -709,9 +719,34 @@ class TodoFloat(ctk.CTk):
 
     # ── Window management ──────────────────────────────
 
+    def _toggle_collapse(self):
+        """Fold window to title-bar only, or expand back."""
+        if self.collapsed:
+            # Expand
+            self.collapsed = False
+            self.collapse_btn.configure(text="▼")
+            self.status_bar.pack(fill="x", before=self.task_scroll)
+            self.task_scroll.pack(fill="both", expand=True, padx=4, pady=(2, 0),
+                                  before=self.add_frame)
+            self.add_frame.pack(fill="x", side="bottom", padx=0, pady=0)
+            if self._expanded_geometry:
+                self.geometry(self._expanded_geometry)
+        else:
+            # Collapse — save geometry, hide content, shrink
+            self.collapsed = True
+            self.collapse_btn.configure(text="▲")
+            self._expanded_geometry = self.geometry()
+            self.status_bar.pack_forget()
+            self.task_scroll.pack_forget()
+            self.add_frame.pack_forget()
+            x, y = self.winfo_x(), self.winfo_y()
+            w = self.winfo_width()
+            self.geometry(f"{w}x44+{x}+{y}")
+
     def _on_close(self):
         """Save window geometry and hide to system tray (or quit)."""
-        self.config["window_geometry"] = self.geometry()
+        geo = self._expanded_geometry if self.collapsed else self.geometry()
+        self.config["window_geometry"] = geo
         save_config(self.config)
 
         try:
