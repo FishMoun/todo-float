@@ -747,8 +747,10 @@ class TodoFloat(ctk.CTk):
             self.collapse_btn.configure(text="▲")
             self._expanded_geometry = self.geometry()
             self.content_frame.pack_forget()
-            x, y = self.winfo_x(), self.winfo_y()
-            w = self.winfo_width()
+            # Derive width & position from the saved expanded geometry string
+            # (more reliable than winfo_width which may drift)
+            parts = self._expanded_geometry.replace("+", "x").split("x")
+            w, _, x, y = parts[0], parts[1], parts[2], parts[3]
             self.geometry(f"{w}x44+{x}+{y}")
 
     def _on_close(self):
